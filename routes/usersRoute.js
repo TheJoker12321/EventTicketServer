@@ -40,7 +40,7 @@ user.post('/tickets/buy', authentication, async (req, res) => {
     }
 
     events.splice(indexEventFound, 1, findEvent)
-    await fs.promises.writeFile(eventsPATH, events)
+    await fs.promises.writeFile(eventsPATH, JSON.stringify(events))
 
     const newReceipt = {
 
@@ -51,7 +51,7 @@ user.post('/tickets/buy', authentication, async (req, res) => {
     }
 
     receipts.push(newReceipt)
-    await fs.promises.writeFile(receiptPATH, receipts)
+    await fs.promises.writeFile(receiptPATH, JSON.stringify(receipts))
 
     res.status(201).json({
 
