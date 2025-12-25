@@ -114,11 +114,12 @@ user.put('/:username/to/:newUsername/:event', authentication, async (req, res) =
     
     receipts.splice(receipts.indexOf(eventOfLastUser), 1)
     eventOfLastUser.username = toUsername
+    eventOfLastUser.password = req.headers["password"]
     receipts.push(eventOfLastUser)
 
     await fs.promises.writeFile(receiptPATH, JSON.stringify(receipts))
 
-    await fs.promises.writeFile('./logs/changes.txt', `update username from ${fromUsername} to ${toUsername}`)
+    await fs.promises.appendFile('./logs/changes.txt', `update username from ${fromUsername} to ${toUsername} \n`)
     
     res.status(204).json({
 
@@ -134,10 +135,11 @@ user.delete('/:username/:event', authentication, async (req, res) => {
 
     const { username, event } = req.params
 
+
     const receipts = await readJsonFile(receiptPATH)
     const events = await readJsonFile(eventsPATH)
 
-    const findReceipt = receipts.find(receiptObj => receiptObj.username === username && receiptObj.event === event)
+    const findReceipt = receipts.find(receiptObj => receiptObj.username === username && receiptObj.eventName === event)
     const findEvent = events.find(eventObj => eventObj.eventName === event)
     const indexEventFound = events.indexOf(findEvent)
 
@@ -147,7 +149,7 @@ user.delete('/:username/:event', authentication, async (req, res) => {
 
     await fs.promises.writeFile(eventsPATH, JSON.stringify(events))
 
-    await fs.promises.writeFile('./logs/changes.txt', "receipt deleted successfuly and apdate quantity in events")
+    await fs.promises.appendFile('./logs/changes.txt', "receipt deleted successfuly and apdate quantity in events \n")
 
     res.status(202).json({
 
