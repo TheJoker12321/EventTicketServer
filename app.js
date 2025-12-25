@@ -30,12 +30,14 @@ app.post('/user/register',checkUniqueUsername , async (req, res) => {
 
     const username = req.body.username
     const password = req.body.password
+    const role = 'user'
 
     const users = await readJsonFile(PATH);
     users.push({
 
         username,
-        password
+        password,
+        role: req.header('admin') === '1234' ? 'admin' : role
     
     });
 

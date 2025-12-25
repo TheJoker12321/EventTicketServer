@@ -12,6 +12,19 @@ event.use(express.json())
 
 event.post('/', authentication, async (req, res) => {
 
+    const users = await readJsonFile('./data/users.json')
+    const userFound = users.find(userObj => userObj.username === req.headers["username"])
+    
+    if (userFound.role === 'admin') {
+
+        res.status(401).json({
+
+            error: "only users can create events"
+
+        })
+        
+    }
+
     const newEvent = {
 
         eventName: req.body.eventName,

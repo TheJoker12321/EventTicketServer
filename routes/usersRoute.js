@@ -11,6 +11,19 @@ user.use(express.json())
 
 
 user.post('/tickets/buy', authentication, async (req, res) => {
+    
+    const users = await readJsonFile('./data/users.json')
+    const userFound = users.find(userObj => userObj.username === req.headers["username"])
+    
+    if (userFound.role === 'user') {
+
+        res.status(401).json({
+
+            error: "only admins can create events"
+
+        })
+        
+    }
 
     const events = await readJsonFile(eventsPATH)
     const receipts = await readJsonFile(receiptPATH)
@@ -86,6 +99,61 @@ user.get('/:username/summary', authentication, async (req, res) => {
 
     })
 
+
+})
+
+
+user.put('/:username/to/:newUsername/:event', authentication, async (req, res) => {
+
+    const fromUsername = req.params.username
+    const toUsername = req.params.newUsername
+    const { event } = req.params
+
+    const receipts = await readJsonFile(receiptPATH)
+    const eventOfLastUser = receipts.find(receiptObj => receiptObj.username === fromUsername && receiptObj.eventName === event)
+    
+    receipts.splice(receipts.indexOf(eventOfLastUser), 1)
+    eventOfLastUser.username = toUsername
+    receipts.push(eventOfLastUser)
+
+    await fs.promises.writeFile(receiptPATH, JSON.stringify(receipts))
+
+    await fs.promises.writeFile('./logs/changes.txt', `update username from ${fromUsername} to ${toUsername}`)
+    
+    res.status(204).json({
+
+        msg: "update username",
+        newReceipt: eventOfLastUser
+
+    })
+
+})
+
+
+user.delete('/:username/:event', authentication, async (req, res) => {
+
+    const { username, event } = req.params
+
+    const receipts = await readJsonFile(receiptPATH)
+    const events = await readJsonFile(eventsPATH)
+
+    const findReceipt = receipts.find(receiptObj => receiptObj.username === username && receiptObj.event === event)
+    const findEvent = events.find(eventObj => eventObj.eventName === event)
+    const indexEventFound = events.indexOf(findEvent)
+
+    findEvent.ticketsForSale += findReceipt.quantity
+    receipts.splice(receipts.indexOf(findReceipt), 1)
+    events.splice(indexEventFound, 1, findEvent)
+
+    await fs.promises.writeFile(eventsPATH, JSON.stringify(events))
+
+    await fs.promises.writeFile('./logs/changes.txt', "receipt deleted successfuly and apdate quantity in events")
+
+    res.status(202).json({
+
+        msg: "receipt deleted successfuly and apdate quantity in events"
+    
+    })
 
 })
 
